@@ -36,4 +36,14 @@ class User(db.Model):
                        first_name=first_name, last_name=last_name)
 
         return new_user
+
+    @classmethod
+    def authenticate(cls, username, password):
+        """Authenticate User"""
+
+        user = User.query.filter(User.username == username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            return user
+        
+        return False
         

@@ -1,8 +1,8 @@
 """Flask app for Feedback"""
 
-from flask import Flask, render_template, redirect 
+from flask import Flask, render_template, redirect, flash, session
 from models import db, connect_db, User
-from forms import UserForm
+from forms import NewUserForm, LoginForm
 
 
 app = Flask(__name__)
@@ -23,7 +23,7 @@ def root():
 @app.route('/register', methods=["GET", "POST"])
 def add_user():
 
-    form = UserForm()
+    form = NewUserForm()
 
     if form.validate_on_submit():
         username = form.username.data
@@ -39,12 +39,35 @@ def add_user():
         # Email isssue validation here 
         try: 
             db.session.commit()
-        except Exception as e:
-            return f"Error: {e}"
+        except Exception:
+            flash("username or email already exists")
+            return render_template('register.html', form=form)
 
         return redirect('/secret')
 
     return render_template('register.html', form=form)
+
+
+@app.route('/login', methods=["GET", "POST"])
+def login():
+    """"""
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+
+        user = User.authenticate(username, password)
+
+        if user:
+            session['user_id'] = user.id
+            return redirect('/secret')
+        else:
+            flash("Invalid username or password!")
+            return render_template('login.html', form=form)
+
+    return render_template('login.html', form=form)
 
 
 @app.route('/secret')

@@ -11,6 +11,11 @@
 <body>
   <div class="container">
     <h1>{% block header %}HEADER GOES HERE{% endblock %}</h1>
+    <div>
+      {% for msg in get_flashed_messages() %}
+        <p class="alert alert-danger">{{ msg }}</p>
+      {% endfor %}
+    </div>
     <br>
     {% block content %}CONTENT GOES HERE{% endblock %}
   </div>
