@@ -23,6 +23,12 @@ def root():
 @app.route('/register', methods=["GET", "POST"])
 def add_user():
 
+    user_id = session.get("user_id")
+    
+    if user_id:
+        user = User.query.get(user_id)
+        return redirect(f"/users/{user.username}")
+    
     form = NewUserForm()
 
     if form.validate_on_submit():
@@ -31,9 +37,10 @@ def add_user():
         email = form.email.data
         first_name = form.first_name.data
         last_name = form.last_name.data
+        is_admin = form.is_admin.data
 
         new_user = User.register(
-            username, password, email, first_name, last_name)
+            username, password, email, first_name, last_name, is_admin)
         db.session.add(new_user)
 
         try:
@@ -50,7 +57,12 @@ def add_user():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
-    """"""
+    """Login an existing user."""
+
+    user_id = session.get("user_id")
+    if user_id:
+        user = User.query.get(user_id)
+        return redirect(f"/users/{user.username}")
 
     form = LoginForm()
 
@@ -78,14 +90,19 @@ def display_user(username):
     """
 
     user_id = session.get('user_id')
-    user = User.query.filter(User.username == username).one()
+    logged_in_user = User.query.get(user_id)
 
-    if user_id == user.id:
-        user = User.query.get(user_id)
+    try:
+        user = User.query.filter(User.username == username).one()
+    except Exception:
+        abort(404)
+
+    if user_id == user.id or logged_in_user.is_admin:
+        user = User.query.get(user.id)
         return render_template('user.html', user=user, feedbacks=user.feedbacks)
 
     else:
-        abort(404)
+        abort(401)
 
 
 @app.route('/logout')
@@ -101,10 +118,15 @@ def delete_user(username):
     """ Delete User """
 
     user_id = session.get('user_id')
-    user = User.query.filter(User.username == username).one()
+    logged_in_user = User.query.get(user_id)
 
-    if user_id != user.id:
+    try:
+        user = User.query.filter(User.username == username).one()
+    except Exception:
         abort(404)
+
+    if user_id != user.id and not logged_in_user.is_admin:
+        abort(401)
 
     db.session.delete(user)
     db.session.commit()
@@ -118,10 +140,15 @@ def add_feedback(username):
     form = FeedbackForm()
 
     user_id = session.get('user_id')
-    user = User.query.filter(User.username == username).one()
+    logged_in_user = User.query.get(user_id)
 
-    if user_id != user.id:
+    try:
+        user = User.query.filter(User.username == username).one()
+    except Exception:
         abort(404)
+
+    if user_id != user.id and not logged_in_user.is_admin:
+        abort(401)
 
     if form.validate_on_submit():
 
@@ -148,11 +175,13 @@ def update_feedback(feedback_id):
     form = FeedbackForm()
 
     user_id = session.get('user_id')
-    feedback = Feedback.query.get(feedback_id)
+    logged_in_user = User.query.get(user_id)
+
+    feedback = Feedback.query.get_or_404(feedback_id)
     user = feedback.user
 
-    if user_id != user.id:
-        abort(404)
+    if user_id != user.id and not logged_in_user.is_admin:
+        abort(401)
 
     if form.validate_on_submit():
         feedback.title = form.title.data
@@ -174,13 +203,14 @@ def delete_feedback(feedback_id):
     """ Delete Feedback """
 
     user_id = session.get('user_id')
-    feedback = Feedback.query.get(feedback_id)
+    logged_in_user = User.query.get(user_id)
+
+    feedback = Feedback.query.get_or_404(feedback_id)
     user = feedback.user
 
-    if user_id != user.id:
-        abort(404)
+    if user_id != user.id and not logged_in_user.is_admin:
+        abort(401)
 
     db.session.delete(feedback)
     db.session.commit()
     return redirect(f'/users/{user.username}')
-

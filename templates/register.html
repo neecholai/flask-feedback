@@ -13,8 +13,15 @@
                 if field.widget.input_type != 'hidden' %}
 
   <p>
+    {% if field.name == 'is_admin' %}
+    <div class="form-check">
+      {{ field(class_="form-check-input")  }}
+      {{ field.label(class_="form-check-label")  }}
+    </div>
+    {% else %}
     {{ field.label  }}
     {{ field(class_="form-control")  }}
+    {% endif %}
 
     {% for error in field.errors %}
     {{ error }}
@@ -22,6 +29,8 @@
   </p>
 
   {% endfor %}
-  <button class="btn btn-primary">Add User</button>
+  <button class="btn btn-primary">Register</button>
+  <a href="/login" class="btn btn-success">Login</a>
 </form>
+
 {% endblock %}

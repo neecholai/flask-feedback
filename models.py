@@ -25,18 +25,19 @@ class User(db.Model):
     email = db.Column(db.String(50), nullable=False, unique=True)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     feedbacks = db.relationship('Feedback', backref='user',
                                 cascade='all, delete-orphan')
 
     @classmethod
-    def register(cls, username, password, email, first_name, last_name):
+    def register(cls, username, password, email, first_name, last_name, is_admin):
         """Register User with hash password and return new User instance"""
 
         hashed_pw = bcrypt.generate_password_hash(password).decode("utf8")
         
         new_user = cls(username=username, password=hashed_pw, email=email,
-                       first_name=first_name, last_name=last_name)
+                       first_name=first_name, last_name=last_name, is_admin=is_admin)
 
         return new_user
 

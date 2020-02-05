@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField
 from wtforms.validators import InputRequired, Email, Length
 
 
@@ -21,6 +21,7 @@ class NewUserForm(FlaskForm):
     last_name = StringField("Last Name", validators=[
         InputRequired(), Length(max=30)
     ])
+    is_admin = BooleanField("Admin")
 
 
 class LoginForm(FlaskForm):
