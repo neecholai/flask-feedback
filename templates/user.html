@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}User Page{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-sm-12 col-md-offset-2 col-md-8 col-lg-offset-3 col-lg-6">
+        <div class='alert alert-secondary'>
+            <h1 class='my-2'>{{user.first_name}} {{user.last_name}}</h1>
+            <h5><strong>Username: </strong> {{user.username}} </h5>
+            <h5><strong>Email: </strong> {{user.email}} </h5>
+        </div>
+
+        {% for feedback in feedbacks %}
+        <form action="/feedback/{{feedback.id}}/delete" method="POST" class="my-3">
+            <span><b>{{feedback.title}}: </b></span>
+            <a href="/feedback/{{feedback.id}}/update" class="badge badge-primary">Edit</a>
+            <button type='submit' class='badge badge-danger'>Delete</button>
+            <div class='ml-3'><small><em>{{feedback.content}}</em></small></div>
+        </form>
+        {% endfor %}
+
+        <span>
+            <form action="/users/{{user.username}}/delete" method="POST">
+                <a href="/users/{{user.username}}/feedback/add" class="btn btn-success">Add Feedback</a>
+                <button type="submit" class="btn btn-danger">Delete User</button>
+            </form>
+        </span>
+
+    </div>
+</div>
+
+{% endblock %}
+

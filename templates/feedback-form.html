@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %} Add Feedback {% endblock %}
+
+{% block header %} Add Feedback {% endblock %}
+
+{% block content %}
+
+<form action="{{action}}" method="POST">
+    {{ form.hidden_tag() }}
+
+    {% for field in form 
+                if field.widget.input_type != 'hidden' %}
+
+    <p>
+        {{ field.label  }}
+        {{ field(class_="form-control")  }}
+
+        {% for error in field.errors %}
+        {{ error }}
+        {% endfor %}
+    </p>
+
+    {% endfor %}
+
+    <button class="btn btn-primary">
+        {% if '/add' in action %}
+            Add Feedback
+        {% endif %}
+        {% if '/update' in action %}
+            Edit Feedback
+        {% endif %}
+    </button>
+</form>
+{% endblock %}
