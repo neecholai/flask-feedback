@@ -36,3 +36,19 @@ class FeedbackForm(FlaskForm):
 
     title = StringField("Title", validators=[InputRequired(), Length(max=100)])
     content = TextAreaField("Content", validators=[InputRequired()])
+
+
+class ForgetPasswordForm(FlaskForm):
+    """Form for submitting email to receive change password email"""
+
+    email = StringField("Email", validators=[
+        InputRequired(), Email(), Length(max=50)
+    ])
+
+
+class ResetPasswordForm(FlaskForm):
+    """Form for changing password"""
+
+    password = PasswordField("Password", validators=[
+        InputRequired()
+    ])

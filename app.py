@@ -2,7 +2,8 @@
 
 from flask import Flask, render_template, redirect, flash, session, abort
 from models import db, connect_db, User, Feedback
-from forms import NewUserForm, LoginForm, FeedbackForm
+from forms import NewUserForm, LoginForm, FeedbackForm, ForgetPasswordForm, ResetPasswordForm
+from flask_mail import Message, Mail
 
 
 app = Flask(__name__)
@@ -10,6 +11,18 @@ app.config['SECRET_KEY'] = "DHFGUSRGHUISHGUISHG"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///feedback'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
+
+mail_settings = {
+    "MAIL_SERVER": 'smtp@gmail.com',
+    "MAIL_PORT": 465,  # perhaps port 587 if this doesn't work
+    "MAIL_USE_SSL": True,
+    "MAIL_USERNAME": 'nicholaihansen22@gmail.com',
+    "MAIL_PASSWORD": '?LghtnP3532?'
+}
+
+app.config.update(mail_settings)
+mail = Mail(app)
+mail.init_app(app)
 
 connect_db(app)
 db.create_all()
@@ -24,11 +37,11 @@ def root():
 def add_user():
 
     user_id = session.get("user_id")
-    
+
     if user_id:
         user = User.query.get(user_id)
         return redirect(f"/users/{user.username}")
-    
+
     form = NewUserForm()
 
     if form.validate_on_submit():
@@ -214,3 +227,62 @@ def delete_feedback(feedback_id):
     db.session.delete(feedback)
     db.session.commit()
     return redirect(f'/users/{user.username}')
+
+
+@app.route('/password/forget', methods=["GET", "POST"])
+def forget_password():
+
+    form = ForgetPasswordForm()
+
+    if form.validate_on_submit():
+
+        user = User.query.filter(User.email == form.email.data).first()
+
+        if user:
+
+            [username, token] = User.generate_reset_token(user.email)
+
+            msg = Message(
+                        subject="Hello",
+                        sender=app.config.get("MAIL_USERNAME"),
+                        recipients=[user.email],
+                        body=f""" Reset password with this link ->
+                        http://localhost:5000/password/reset/{username}/{token}""",
+                        html='<b>HTML</b>')
+
+            with app.app_context():
+                mail.send(msg)
+
+            flash("Please check email for link to reset your password.")
+            return redirect('/password/forget', form=form)
+
+        else:
+            flash('not a valid email')
+            return redirect('/password/forget')
+
+    return render_template('forget-password.html', form=form)
+
+
+@app.route('/password/reset/<username>/<token>')
+def update_password_form(username, token):
+
+    user = User.validate_reset_token(username, token)
+    form = ResetPasswordForm()
+
+    if user:
+        render_template('reset-password.html', form=form, user=user)
+    else:
+        abort(401)
+
+
+@app.route('/password/reset/<username>', methods=["POST"])
+def reset_password(username):
+
+    form = ResetPasswordForm()
+
+    if form.validate_on_submit():
+        password = form.password.data
+        user = User.update_password(username, password)
+
+        return redirect('/login')
+        
